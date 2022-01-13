@@ -11,6 +11,7 @@ workspace "AugmentationCPP"
 	outputdir = "%{cfg.buildcfg}"
 
 	IncludeDir = {}
+	IncludeDir["ta-lib"] = "vendor/ta-lib/include"
 
 	CppVersion = "C++17"
 	-- MsvcToolset = "v142"
