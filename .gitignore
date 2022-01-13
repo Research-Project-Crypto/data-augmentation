@@ -1,0 +1,14 @@
+.vs/
+.vscode/
+bin/
+
+*.gch
+
+# Visual Studio
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# gmake2
+Makefile
