@@ -126,7 +126,7 @@ namespace program
             }
 
             size_t size_needed = snprintf(nullptr, 0, format, std::forward<Args>(args)...);
-            char *message = (char*)malloc(sizeof(char) * size_needed);
+            char *message = (char*)malloc(sizeof(char) * (size_needed + 1));
             sprintf(message, format, std::forward<Args>(args)...);
 
             std::lock_guard<std::mutex> lock(this->mutex);
