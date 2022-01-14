@@ -88,7 +88,6 @@ namespace program
 			}
 			catch (const std::exception& e)
 			{
-				continue;
 				g_log->warning("THREAD", "Exception thrown while executing job in thread: %s", e.what());
 				//LOG(WARNING) << "Exception thrown while executing job in thread:" << std::endl << e.what();
 			}
