@@ -4,7 +4,6 @@
             "name": "Linux Env",
             "includePath": [
                 "src/",
-                "vendor/ta-lib/include",
                 "/usr/include"
             ],
             "intelliSenseMode": "linux-gcc-x64",

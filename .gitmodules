@@ -1,3 +1,0 @@
-[submodule "vendor/ta-lib"]
-	path = vendor/ta-lib
-	url = https://github.com/stoni/ta-lib.git
