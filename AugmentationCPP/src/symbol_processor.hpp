@@ -38,7 +38,7 @@ namespace program
 
                     m_candles.push_back(std::move(new_candle));
                 }
-                
+
             }
             catch(const std::exception& e)
             {
@@ -48,18 +48,22 @@ namespace program
             }
 
             g_log->verbose("SYMBOL_PROCESSOR", "Loaded %d candles from %s", m_candles.size(), m_input_file.filename().string().c_str());
-            
+
             return true;
         }
 
-        void calculate_mfi(const size_t period_range = 120)
+        void calculate_mfi(const size_t period_range = 30)
         {
+            g_log->verbose("SYMBOL_PROCESSOR", "Starting processing of MFI.");
+
             const size_t alloc_size = m_candles.size();
 
-            double close[alloc_size];
-            double high[alloc_size];
-            double low[alloc_size];
-            double volume[alloc_size];
+            g_log->verbose("SYMBOL_PROCESSOR", "Allocating double arrays of %d.", alloc_size);
+
+            double* close = new double[alloc_size];
+            double* high = new double[alloc_size];
+            double* low = new double[alloc_size];
+            double* volume = new double[alloc_size];
 
             double mfi_out[alloc_size - period_range];
 
@@ -67,22 +71,27 @@ namespace program
             {
                 const std::unique_ptr<candle>& candle = m_candles.at(i);
 
-                close[i] = candle->close;
-                high[i] = candle->high;
-                low[i] = candle->low;
-                volume[i] = candle->volume;
+                close[i] = candle->m_close;
+                high[i] = candle->m_high;
+                low[i] = candle->m_low;
+                volume[i] = candle->m_volume;
             }
-            
-            int unk0, unk1;
+
+            int beginIdx, endIdx;
             for (size_t i = period_range; i < alloc_size; i++)
             {
                 double tmp_mfi[period_range];
-                TA_MFI(i - period_range, i, high, low, close, volume, period_range, &unk0, &unk1, tmp_mfi);
+                TA_MFI(i, i + period_range, high, low, close, volume, period_range, &beginIdx, &endIdx, tmp_mfi);
 
-                m_candles.at(i)->mfi = tmp_mfi[period_range - 1];
+                m_candles.at(i)->m_mfi = tmp_mfi[period_range - 1];
             }
 
-            g_log->info("SYMBOL_PROCESSOR", "Finished processing MFI on data.");
+            delete[] close;
+            delete[] high;
+            delete[] low;
+            delete[] volume;
+
+            g_log->verbose("SYMBOL_PROCESSOR", "Finished processing MFI on data.");
         }
 
         void start()
@@ -100,14 +109,14 @@ namespace program
             CSVWriter csv_output;
             csv_output.newRow() << "event_time" << "open" << "close" << "high" << "low" << "volume" << "mfi";
 
-            for (std::unique_ptr<candle>& candle : m_candles)
+            for (const std::unique_ptr<candle>& candle : m_candles)
             {
                 csv_output.newRow()
-                    << candle->event_time << candle->open << candle->close << candle->high << candle->low << candle->volume
-                    << candle->mfi;
+                    << candle->m_timestamp << candle->m_open << candle->m_close << candle->m_high << candle->m_low << candle->m_volume
+                    << candle->m_mfi;
             }
 
-            std::string out_dir = m_out_dir / m_input_file.filename();    
+            std::string out_dir = m_out_dir / m_input_file.filename();
             csv_output.writeToFile(out_dir.c_str(), false);
         }
     };
