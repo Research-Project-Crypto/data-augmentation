@@ -12,4 +12,24 @@ git clone https://github.com/Research-Project-Crypto/data-augmentation.git --rec
 
 ```bash
 premake5 gmake2 # linux
+
+# building
+make
+# release build
+make config=release
+```
+
+### Install ta-lib from your package manager
+
+```bash
+yay -S ta-lib
+
+paru -S ta-lib
+
+```
+
+## Executing the program
+
+```bash
+bin/Release/AugmentationCPP data/input/ data/output/
 ```
