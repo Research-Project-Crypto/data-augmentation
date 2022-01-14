@@ -55,7 +55,12 @@ namespace program
                 m_volume[i] = candle->m_volume;
             }
 
-            g_log->verbose("SYMBOL_PROCESSOR", "Allocated double arrays of %d bytes.", m_alloc_size * sizeof(double) * m_columns);
+            g_log->verbose("SYMBOL_PROCESSOR", "Allocated double arrays of %d bytes for %s.", m_alloc_size * sizeof(double) * m_columns, m_input_file.filename().c_str());
+        }
+
+        const char* const file_name()
+        {
+            return m_input_file.filename().c_str();
         }
 
         bool read_input_file()
@@ -82,27 +87,53 @@ namespace program
                 return false;
             }
 
-            g_log->verbose("SYMBOL_PROCESSOR", "Loaded %d candles from %s", m_candles.size(), m_input_file.filename().string().c_str());
+            g_log->verbose("SYMBOL_PROCESSOR", "Loaded %d candles from %s", m_candles.size(), this->file_name());
 
             return true;
         }
 
-        void calculate_mfi(const size_t period_range = 30)
+        void calculate_macd(const size_t fast_period = 12, const size_t slow_period = 26, const size_t signal_period = 9)
         {
-            g_log->verbose("SYMBOL_PROCESSOR", "Starting processing of MFI.");
+            g_log->verbose("SYMBOL_PROCESSOR", "Starting processing of MACD for %s", this->file_name());
 
-            double mfi_out[m_alloc_size - period_range];
+            double* tmp_macd = new double[m_alloc_size];
+            double* tmp_macd_signal = new double[m_alloc_size];
+            double* tmp_macd_hist = new double[m_alloc_size];
 
             int beginIdx, endIdx;
-            for (size_t i = period_range; i < m_alloc_size; i++)
-            {
-                double tmp_mfi[period_range];
-                TA_MFI(i, i + period_range, m_high, m_low, m_close, m_volume, period_range, &beginIdx, &endIdx, tmp_mfi);
+            TA_MACD(0, m_alloc_size, m_close, fast_period, slow_period, signal_period, &beginIdx, &endIdx, tmp_macd, tmp_macd_signal, tmp_macd_hist);
 
-                m_candles.at(i)->m_mfi = tmp_mfi[period_range - 1];
+            for (size_t i = beginIdx; i < endIdx; i++)
+            {
+                const std::unique_ptr<candle>& candle = m_candles.at(i);
+
+                candle->m_macd = tmp_macd[i];
+                candle->m_macd_signal = tmp_macd_signal[i];
+                candle->m_macd_hist = tmp_macd_hist[i];
             }
 
-            g_log->verbose("SYMBOL_PROCESSOR", "Finished processing MFI on data.");
+            delete[] tmp_macd;
+            delete[] tmp_macd_signal;
+            delete[] tmp_macd_hist;
+
+            g_log->verbose("SYMBOL_PROCESSOR", "Finished processing MFI on data for %s", this->file_name());
+        }
+
+        void calculate_mfi(const size_t period_range = 30)
+        {
+            g_log->verbose("SYMBOL_PROCESSOR", "Starting processing of MFI for %s", this->file_name());
+
+            double* tmp_mfi = new double[m_alloc_size];
+
+            int beginIdx, endIdx;
+            TA_MFI(0, m_alloc_size, m_high, m_low, m_close, m_volume, period_range, &beginIdx, &endIdx, tmp_mfi);
+
+            for (size_t i = beginIdx; i < endIdx; i++)
+                m_candles.at(i)->m_mfi = tmp_mfi[i];
+
+            delete[] tmp_mfi;
+
+            g_log->verbose("SYMBOL_PROCESSOR", "Finished processing MFI on data for %s", this->file_name());
         }
 
         void start()
@@ -112,6 +143,7 @@ namespace program
             this->allocate_arrays();
 
             // do our indicator calculation
+            this->calculate_macd();
             this->calculate_mfi();
 
             this->write_to_out();
@@ -120,12 +152,16 @@ namespace program
         void write_to_out()
         {
             CSVWriter csv_output;
-            csv_output.newRow() << "event_time" << "open" << "close" << "high" << "low" << "volume" << "mfi";
+            csv_output.newRow()
+                << "event_time" << "open" << "close" << "high" << "low" << "volume"
+                << "macd" << "macd_signal" << "macd_hist"
+                << "mfi";
 
             for (const std::unique_ptr<candle>& candle : m_candles)
             {
                 csv_output.newRow()
                     << candle->m_timestamp << candle->m_open << candle->m_close << candle->m_high << candle->m_low << candle->m_volume
+                    << candle->m_macd << candle->m_macd_signal << candle->m_macd_hist
                     << candle->m_mfi;
             }
 

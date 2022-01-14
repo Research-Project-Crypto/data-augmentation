@@ -12,7 +12,11 @@ struct candle
 
     // indicators
     double m_mfi;
+
     double m_macd;
+    double m_macd_signal;
+    double m_macd_hist;
+
     double m_rsi;
 
     candle() = default;
