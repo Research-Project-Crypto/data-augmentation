@@ -52,11 +52,45 @@ namespace program
             return true;
         }
 
+        void calculate_mfi(const size_t period_range = 120)
+        {
+            const size_t alloc_size = m_candles.size();
+
+            double close[alloc_size];
+            double high[alloc_size];
+            double low[alloc_size];
+            double volume[alloc_size];
+
+            double mfi_out[alloc_size - period_range];
+
+            for (size_t i = 0; i < alloc_size; i++)
+            {
+                const std::unique_ptr<candle>& candle = m_candles.at(i);
+
+                close[i] = candle->close;
+                high[i] = candle->high;
+                low[i] = candle->low;
+                volume[i] = candle->volume;
+            }
+            
+            int unk0, unk1;
+            for (size_t i = period_range; i < alloc_size; i++)
+            {
+                double tmp_mfi[period_range];
+                TA_MFI(i - period_range, i, high, low, close, volume, period_range, &unk0, &unk1, tmp_mfi);
+
+                m_candles.at(i)->mfi = tmp_mfi[period_range - 1];
+            }
+
+            g_log->info("SYMBOL_PROCESSOR", "Finished processing MFI on data.");
+        }
+
         void start()
         {
             this->read_input_file();
 
             // do our indicator calculation
+            this->calculate_mfi();
 
             this->write_to_out();
         }
@@ -64,11 +98,13 @@ namespace program
         void write_to_out()
         {
             CSVWriter csv_output;
-            csv_output.newRow() << "event_time" << "open" << "close" << "high" << "low" << "volume";
+            csv_output.newRow() << "event_time" << "open" << "close" << "high" << "low" << "volume" << "mfi";
 
             for (std::unique_ptr<candle>& candle : m_candles)
             {
-                csv_output.newRow() << candle->event_time << candle->open << candle->close << candle->high << candle->low << candle->volume;
+                csv_output.newRow()
+                    << candle->event_time << candle->open << candle->close << candle->high << candle->low << candle->volume
+                    << candle->mfi;
             }
 
             std::string out_dir = m_out_dir / m_input_file.filename();    
