@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "symbol_processor.hpp"
+#include <exception>
 
 using namespace program;
 
@@ -28,6 +29,23 @@ int main(int argc, const char** argv)
 
         return 1;
     }
+
+    try
+    {
+
+        if (TA_RetCode code = TA_Initialize(); code != TA_SUCCESS)
+        {
+            throw std::runtime_error("TA_Initialize did not return TA_SUCCESS.");
+        }
+    }
+    catch(const std::exception& e)
+    {
+        TA_Shutdown();
+
+        g_log->error("MAIN", "Error occurred while called TA_Initialize:\n%s", e.what());
+        return 1;
+    }
+
 
     for (const auto file : std::filesystem::directory_iterator(input_folder))
     {
