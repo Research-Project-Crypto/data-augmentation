@@ -95,7 +95,7 @@ namespace program
         void calculate_bollinger_bands(const size_t period_range = 20, const size_t optInNbDevUp = 2, const size_t optInNbDevDown = 2)
         {
             // optInNbDevUp & optInNbDevDown = standard deviation for upper and lower band, usually 2 is used
-            g_log->verbose("SYMBOL_PROCESSOR", "Starting processing of MACD for %s", this->file_name());
+            g_log->verbose("SYMBOL_PROCESSOR", "Starting processing of Bollinger Bands for %s", this->file_name());
 
             double* tmp_upper_band = new double[m_alloc_size];
             double* tmp_middle_band = new double[m_alloc_size];
