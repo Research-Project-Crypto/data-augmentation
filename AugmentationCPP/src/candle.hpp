@@ -25,13 +25,4 @@ struct candle
         low = low;
         volume = volume;
     }
-
-    candle calculate(candle& other, candle& processedother)
-    {
-        candle candle;
-
-        candle.event_time = other.event_time;
-
-        return candle;
-    }
 };
