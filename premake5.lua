@@ -11,11 +11,9 @@ workspace "AugmentationCPP"
 	outputdir = "%{cfg.buildcfg}"
 
 	IncludeDir = {}
-	IncludeDir["ta-lib"] = "vendor/ta-lib/include"
+	IncludeDir["ta-lib"] = "/usr/include/ta-lib"
 
 	CppVersion = "C++17"
-	-- MsvcToolset = "v142"
-	-- WindowsSdkVersion = "10.0"
 
 	function DeclareMSVCOptions()
 		filter "system:windows"
@@ -82,7 +80,8 @@ workspace "AugmentationCPP"
 
 		links
 		{
-			"pthread"
+			"pthread",
+			"ta_lib"
 		}
 
 		pchheader "%{PrecompileHeaderInclude}"
