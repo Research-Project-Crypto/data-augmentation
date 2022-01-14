@@ -3,26 +3,26 @@
 
 struct candle
 {
-    std::string event_time;
-    double open;
-    double close;
-    double high;
-    double low;
-    double volume;
+    std::string m_timestamp;
+    double m_open;
+    double m_close;
+    double m_high;
+    double m_low;
+    double m_volume;
 
     // indicators
-    double mfi;
-    double macd;
-    double rsi;
+    double m_mfi;
+    double m_macd;
+    double m_rsi;
 
     candle() = default;
     candle(std::string timestamp, double open, double close, double high, double low, double volume)
     {
-        event_time = timestamp;
-        open = open;
-        close = close;
-        high = high;
-        low = low;
-        volume = volume;
+        m_timestamp = timestamp;
+        m_open = open;
+        m_close = close;
+        m_high = high;
+        m_low = low;
+        m_volume = volume;
     }
 };
