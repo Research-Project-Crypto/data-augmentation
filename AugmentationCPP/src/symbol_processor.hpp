@@ -165,6 +165,24 @@ namespace program
             g_log->verbose("SYMBOL_PROCESSOR", "Finished processing MFI on data for %s", this->file_name());
         }
 
+        void calculate_rsi(const size_t period_range = 14)
+        {
+            g_log->verbose("SYMBOL_PROCESSOR", "Starting processing of RSI for %s", this->file_name());
+
+            double* tmp_rsi = new double[m_alloc_size];
+
+            int beginIdx, endIdx;
+            TA_RSI(0, m_alloc_size, m_close, period_range, &beginIdx, &endIdx, tmp_rsi);
+
+            for (size_t i = beginIdx; i < endIdx; i++)
+                m_candles.at(i)->m_rsi = tmp_rsi[i];
+
+            delete[] tmp_rsi;
+
+            g_log->verbose("SYMBOL_PROCESSOR", "Finished processing RSI on data for %s", this->file_name());
+        }
+
+
         void start()
         {
             if (!this->read_input_file()) return;
@@ -175,6 +193,7 @@ namespace program
             this->calculate_bollinger_bands();
             this->calculate_macd();
             this->calculate_mfi();
+            this->calculate_rsi();
 
             this->write_to_out();
         }
@@ -186,7 +205,8 @@ namespace program
                 << "event_time" << "open" << "close" << "high" << "low" << "volume"
                 << "upper_band" << "middle_band" << "lower_band"
                 << "macd" << "macd_signal" << "macd_hist"
-                << "mfi";
+                << "mfi"
+                << "rsi";
 
             for (const std::unique_ptr<candle>& candle : m_candles)
             {
@@ -194,7 +214,8 @@ namespace program
                     << candle->m_timestamp << candle->m_open << candle->m_close << candle->m_high << candle->m_low << candle->m_volume
                     << candle->m_upper_band << candle->m_middle_band << candle->m_lower_band
                     << candle->m_macd << candle->m_macd_signal << candle->m_macd_hist
-                    << candle->m_mfi;
+                    << candle->m_mfi
+                    << candle->m_rsi;
             }
 
             std::string out_dir = m_out_dir / m_input_file.filename();
