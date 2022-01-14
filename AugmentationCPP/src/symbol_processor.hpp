@@ -11,6 +11,13 @@ namespace program
         const char* m_out_dir;
 
         std::vector<std::unique_ptr<candle>> m_candles;
+        size_t m_alloc_size;
+        double* m_open;
+        double* m_close;
+        double* m_high;
+        double* m_low;
+        double* m_volume;
+        const int m_columns = 5;
 
     public:
         symbol_processor(std::filesystem::path file_path, const char* out_dir) :
@@ -18,9 +25,37 @@ namespace program
         {
 
         }
-        ~symbol_processor()
+        virtual ~symbol_processor()
         {
+            delete[] m_open;
+            delete[] m_close;
+            delete[] m_high;
+            delete[] m_low;
+            delete[] m_volume;
+        }
 
+        void allocate_arrays()
+        {
+            m_alloc_size = m_candles.size();
+
+            m_open = new double[m_alloc_size];
+            m_close = new double[m_alloc_size];
+            m_high = new double[m_alloc_size];
+            m_low = new double[m_alloc_size];
+            m_volume = new double[m_alloc_size];
+
+            for (size_t i = 0; i < m_alloc_size; i++)
+            {
+                const std::unique_ptr<candle>& candle = m_candles.at(i);
+
+                m_open[i] = candle->m_close;
+                m_close[i] = candle->m_close;
+                m_high[i] = candle->m_high;
+                m_low[i] = candle->m_low;
+                m_volume[i] = candle->m_volume;
+            }
+
+            g_log->verbose("SYMBOL_PROCESSOR", "Allocated double arrays of %d bytes.", m_alloc_size * sizeof(double) * m_columns);
         }
 
         bool read_input_file()
@@ -56,47 +91,25 @@ namespace program
         {
             g_log->verbose("SYMBOL_PROCESSOR", "Starting processing of MFI.");
 
-            const size_t alloc_size = m_candles.size();
-
-            g_log->verbose("SYMBOL_PROCESSOR", "Allocating double arrays of %d.", alloc_size);
-
-            double* close = new double[alloc_size];
-            double* high = new double[alloc_size];
-            double* low = new double[alloc_size];
-            double* volume = new double[alloc_size];
-
-            double mfi_out[alloc_size - period_range];
-
-            for (size_t i = 0; i < alloc_size; i++)
-            {
-                const std::unique_ptr<candle>& candle = m_candles.at(i);
-
-                close[i] = candle->m_close;
-                high[i] = candle->m_high;
-                low[i] = candle->m_low;
-                volume[i] = candle->m_volume;
-            }
+            double mfi_out[m_alloc_size - period_range];
 
             int beginIdx, endIdx;
-            for (size_t i = period_range; i < alloc_size; i++)
+            for (size_t i = period_range; i < m_alloc_size; i++)
             {
                 double tmp_mfi[period_range];
-                TA_MFI(i, i + period_range, high, low, close, volume, period_range, &beginIdx, &endIdx, tmp_mfi);
+                TA_MFI(i, i + period_range, m_high, m_low, m_close, m_volume, period_range, &beginIdx, &endIdx, tmp_mfi);
 
                 m_candles.at(i)->m_mfi = tmp_mfi[period_range - 1];
             }
-
-            delete[] close;
-            delete[] high;
-            delete[] low;
-            delete[] volume;
 
             g_log->verbose("SYMBOL_PROCESSOR", "Finished processing MFI on data.");
         }
 
         void start()
         {
-            this->read_input_file();
+            if (!this->read_input_file()) return;
+
+            this->allocate_arrays();
 
             // do our indicator calculation
             this->calculate_mfi();
