@@ -92,7 +92,7 @@ namespace program
             return true;
         }
 
-        void calculate_adosc(const size_t fast_period = 12, const size_t slow_period = 26)
+        void calculate_adosc(const size_t fast_period = 24, const size_t slow_period = 45)
         {
             g_log->verbose("SYMBOL_PROCESSOR", "Starting processing of ADOSC for %s", this->file_name());
 
@@ -107,6 +107,23 @@ namespace program
             delete[] tmp_adosc;
 
             g_log->verbose("SYMBOL_PROCESSOR", "Finished processing ADOSC on data for %s", this->file_name());
+        }
+
+        void calculate_atr(const size_t period_range = 24)
+        {
+            g_log->verbose("SYMBOL_PROCESSOR", "Starting processing of ATR for %s", this->file_name());
+
+            double* tmp_atr = new double[m_alloc_size];
+
+            int beginIdx, endIdx;
+            TA_ATR(0, m_alloc_size, m_high, m_low, m_close, period_range, &beginIdx, &endIdx, tmp_atr);
+
+            for (size_t i = beginIdx; i < endIdx; i++)
+                m_candles.at(i)->m_atr = tmp_atr[i];
+
+            delete[] tmp_atr;
+
+            g_log->verbose("SYMBOL_PROCESSOR", "Finished processing ATR on data for %s", this->file_name());
         }
 
         void calculate_bollinger_bands(const size_t period_range = 20, const size_t optInNbDevUp = 2, const size_t optInNbDevDown = 2)
@@ -207,7 +224,8 @@ namespace program
             this->allocate_arrays();
 
             // do our indicator calculation
-            this->calculate_adosc();
+            this->calculate_adosc();            
+            this->calculate_atr();
             this->calculate_bollinger_bands();
             this->calculate_macd();
             this->calculate_mfi();
@@ -222,6 +240,7 @@ namespace program
             csv_output.newRow()
                 << "event_time" << "open" << "close" << "high" << "low" << "volume"
                 << "adosc"
+                << "atr"
                 << "upper_band" << "middle_band" << "lower_band"
                 << "macd" << "macd_signal" << "macd_hist"
                 << "mfi"
@@ -232,6 +251,7 @@ namespace program
                 csv_output.newRow()
                     << candle->m_timestamp << candle->m_open << candle->m_close << candle->m_high << candle->m_low << candle->m_volume
                     << candle->m_adosc
+                    << candle->m_atr
                     << candle->m_upper_band << candle->m_middle_band << candle->m_lower_band
                     << candle->m_macd << candle->m_macd_signal << candle->m_macd_hist
                     << candle->m_mfi
