@@ -2,7 +2,6 @@
 #include <filesystem>
 #include <vector>
 
-#define TA_FUNC_H
 #include <ta-lib/ta_libc.h>
 
 #include "util/csv.h"
