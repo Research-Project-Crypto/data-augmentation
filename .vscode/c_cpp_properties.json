@@ -3,7 +3,7 @@
         {
             "name": "Linux Env",
             "includePath": [
-                "src/",
+                "AugmentationCPP/src/",
                 "/usr/include"
             ],
             "intelliSenseMode": "linux-gcc-x64",
