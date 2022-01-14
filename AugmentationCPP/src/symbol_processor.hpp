@@ -92,6 +92,23 @@ namespace program
             return true;
         }
 
+        void calculate_adosc(const size_t fast_period = 12, const size_t slow_period = 26)
+        {
+            g_log->verbose("SYMBOL_PROCESSOR", "Starting processing of ADOSC for %s", this->file_name());
+
+            double* tmp_adosc = new double[m_alloc_size];
+
+            int beginIdx, endIdx;
+            TA_ADOSC(0, m_alloc_size, m_high, m_low, m_close, m_volume, fast_period, slow_period, &beginIdx, &endIdx, tmp_adosc);
+
+            for (size_t i = beginIdx; i < endIdx; i++)
+                m_candles.at(i)->m_adosc = tmp_adosc[i];
+
+            delete[] tmp_adosc;
+
+            g_log->verbose("SYMBOL_PROCESSOR", "Finished processing ADOSC on data for %s", this->file_name());
+        }
+
         void calculate_bollinger_bands(const size_t period_range = 20, const size_t optInNbDevUp = 2, const size_t optInNbDevDown = 2)
         {
             // optInNbDevUp & optInNbDevDown = standard deviation for upper and lower band, usually 2 is used
@@ -190,6 +207,7 @@ namespace program
             this->allocate_arrays();
 
             // do our indicator calculation
+            this->calculate_adosc();
             this->calculate_bollinger_bands();
             this->calculate_macd();
             this->calculate_mfi();
@@ -203,6 +221,7 @@ namespace program
             CSVWriter csv_output;
             csv_output.newRow()
                 << "event_time" << "open" << "close" << "high" << "low" << "volume"
+                << "adosc"
                 << "upper_band" << "middle_band" << "lower_band"
                 << "macd" << "macd_signal" << "macd_hist"
                 << "mfi"
@@ -212,6 +231,7 @@ namespace program
             {
                 csv_output.newRow()
                     << candle->m_timestamp << candle->m_open << candle->m_close << candle->m_high << candle->m_low << candle->m_volume
+                    << candle->m_adosc
                     << candle->m_upper_band << candle->m_middle_band << candle->m_lower_band
                     << candle->m_macd << candle->m_macd_signal << candle->m_macd_hist
                     << candle->m_mfi

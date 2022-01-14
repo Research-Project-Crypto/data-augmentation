@@ -11,17 +11,21 @@ struct candle
     double m_volume;
 
     // indicators
-    double m_mfi;
+    double m_adosc;
 
     double m_macd;
     double m_macd_signal;
     double m_macd_hist;
+    
+    double m_mfi;
 
     double m_upper_band;
     double m_middle_band;
     double m_lower_band;
 
     double m_rsi;
+
+    
 
     candle() = default;
     candle(std::string timestamp, double open, double close, double high, double low, double volume)
