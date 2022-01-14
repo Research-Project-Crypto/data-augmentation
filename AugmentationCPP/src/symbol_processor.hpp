@@ -92,6 +92,35 @@ namespace program
             return true;
         }
 
+        void calculate_bollinger_bands(const size_t period_range = 20, const size_t optInNbDevUp = 2, const size_t optInNbDevDown = 2)
+        {
+            // optInNbDevUp & optInNbDevDown = standard deviation for upper and lower band, usually 2 is used
+            g_log->verbose("SYMBOL_PROCESSOR", "Starting processing of MACD for %s", this->file_name());
+
+            double* tmp_upper_band = new double[m_alloc_size];
+            double* tmp_middle_band = new double[m_alloc_size];
+            double* tmp_lower_band = new double[m_alloc_size];
+
+            int beginIdx, endIdx;
+            TA_MAType MAtype = TA_MAType_SMA;
+            TA_BBANDS(0, m_alloc_size, m_close, period_range, optInNbDevUp, optInNbDevDown, MAtype, &beginIdx, &endIdx, tmp_upper_band, tmp_middle_band, tmp_lower_band);
+
+            for (size_t i = beginIdx; i < endIdx; i++)
+            {
+                const std::unique_ptr<candle>& candle = m_candles.at(i);
+
+                candle->m_upper_band = tmp_upper_band[i];
+                candle->m_middle_band = tmp_middle_band[i];
+                candle->m_lower_band = tmp_lower_band[i];
+            }
+
+            delete[] tmp_upper_band;
+            delete[] tmp_middle_band;
+            delete[] tmp_lower_band;
+
+            g_log->verbose("SYMBOL_PROCESSOR", "Finished processing BBANDS on data for %s", this->file_name());
+        }
+
         void calculate_macd(const size_t fast_period = 12, const size_t slow_period = 26, const size_t signal_period = 9)
         {
             g_log->verbose("SYMBOL_PROCESSOR", "Starting processing of MACD for %s", this->file_name());
@@ -143,6 +172,7 @@ namespace program
             this->allocate_arrays();
 
             // do our indicator calculation
+            this->calculate_bollinger_bands();
             this->calculate_macd();
             this->calculate_mfi();
 
@@ -154,6 +184,7 @@ namespace program
             CSVWriter csv_output;
             csv_output.newRow()
                 << "event_time" << "open" << "close" << "high" << "low" << "volume"
+                << "upper_band" << "middle_band" << "lower_band"
                 << "macd" << "macd_signal" << "macd_hist"
                 << "mfi";
 
@@ -161,6 +192,7 @@ namespace program
             {
                 csv_output.newRow()
                     << candle->m_timestamp << candle->m_open << candle->m_close << candle->m_high << candle->m_low << candle->m_volume
+                    << candle->m_upper_band << candle->m_middle_band << candle->m_lower_band
                     << candle->m_macd << candle->m_macd_signal << candle->m_macd_hist
                     << candle->m_mfi;
             }

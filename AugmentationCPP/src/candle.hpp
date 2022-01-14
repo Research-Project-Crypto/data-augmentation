@@ -17,6 +17,10 @@ struct candle
     double m_macd_signal;
     double m_macd_hist;
 
+    double m_upper_band;
+    double m_middle_band;
+    double m_lower_band;
+
     double m_rsi;
 
     candle() = default;
