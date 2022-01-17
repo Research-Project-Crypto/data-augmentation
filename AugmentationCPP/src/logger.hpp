@@ -24,7 +24,7 @@ namespace program
             Critical
         };
 
-        Logger(LogLevel logLevel)
+        Logger()
         {
 #ifdef _WIN32
             HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -35,8 +35,6 @@ namespace program
             console_mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN;
             SetConsoleMode(console_handle, console_mode);
 #endif
-
-            this->m_log_level = logLevel;
         }
 
         ~Logger()
@@ -86,12 +84,14 @@ namespace program
         const char* red = "\x1b[31m";
         const char* reset = "\x1b[0m";
 
-        LogLevel m_log_level;
+        LogLevel m_log_level = LogLevel::Verbose;
 
         LOG_ARGS
             void log(LogLevel level, const char* service, const char* format, Args&& ...args)
         {
-            const size_t alloc_size = 8;
+            if (level < m_log_level) return;
+
+            constexpr size_t alloc_size = 8;
 
             char color[alloc_size];
             char level_string[alloc_size];
@@ -137,5 +137,5 @@ namespace program
         }
     };
 
-    inline Logger* g_log = new Logger(Logger::LogLevel::Verbose);
+    inline Logger* g_log = new Logger();
 }
