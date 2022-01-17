@@ -19,7 +19,7 @@ namespace program
 	{
 		int thread_count = std::thread::hardware_concurrency();
 
-		g_log->info("THREAD_POOL", "Allocating %d threads in pool.", thread_count);
+		g_log->info("THREAD_POOL", "Allocated %d threads in pool.", thread_count);
 		this->m_thread_pool.reserve(thread_count);
 
 		for (int i = 0; i < thread_count; i++)
@@ -48,7 +48,7 @@ namespace program
 	bool thread_pool::has_jobs()
 	{
 		std::unique_lock<std::mutex> lock(this->m_lock);
-		
+
 		return !this->m_job_stack.empty();
 	}
 
