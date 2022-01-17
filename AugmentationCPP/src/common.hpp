@@ -1,5 +1,7 @@
 #pragma once
 #include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <vector>
 
 #include <ta-lib/ta_libc.h>

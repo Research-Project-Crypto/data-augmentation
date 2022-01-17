@@ -70,8 +70,8 @@ namespace program
 
             try
             {
-                std::string timestamp;
-                double open, close, high, low, volume;
+                //std::uint64_t timestamp;
+                double timestamp, open, close, high, low, volume;
                 while (input_stream.read_row(timestamp, open, close, high, low, volume))
                 {
                     std::unique_ptr<candle> new_candle = std::make_unique<candle>(timestamp, open, close, high, low, volume);
@@ -224,14 +224,14 @@ namespace program
             this->allocate_arrays();
 
             // do our indicator calculation
-            this->calculate_adosc();            
+            this->calculate_adosc();
             this->calculate_atr();
             this->calculate_bollinger_bands();
             this->calculate_macd();
             this->calculate_mfi();
             this->calculate_rsi();
 
-            this->write_to_out();
+            this->write_binary_out();
         }
 
         void write_to_out()
@@ -260,6 +260,17 @@ namespace program
 
             std::string out_dir = m_out_dir / m_input_file.filename();
             csv_output.writeToFile(out_dir.c_str(), false);
+        }
+
+        void write_binary_out()
+        {
+            std::string out_dir = m_out_dir / m_input_file.stem();
+            std::ofstream output_stream(out_dir + ".bin", std::ios::binary | std::ios::trunc);
+
+            for (const std::unique_ptr<candle>& candle_struct : m_candles)
+                output_stream.write((char*)candle_struct.get(), sizeof(candle));
+
+            output_stream.close();
         }
     };
 }
