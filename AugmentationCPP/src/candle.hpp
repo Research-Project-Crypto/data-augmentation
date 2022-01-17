@@ -3,7 +3,8 @@
 
 struct candle
 {
-    std::string m_timestamp;
+    //std::string m_timestamp;
+    uint64_t m_timestamp;
     double m_open;
     double m_close;
     double m_high;
@@ -27,12 +28,12 @@ struct candle
 
     double m_rsi;
 
-    
+
 
     candle() = default;
-    candle(std::string timestamp, double open, double close, double high, double low, double volume)
+    candle(double timestamp, double open, double close, double high, double low, double volume)
     {
-        m_timestamp = timestamp;
+        m_timestamp = (uint64_t)timestamp;
         m_open = open;
         m_close = close;
         m_high = high;
